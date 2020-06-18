@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ titulo_pagina|title }}</title>
+    <link rel="stylesheet" href="{{ url_for( 'static', filename = 'bootstrap.css') }}" />
+  </head>
+  <body>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul id="messages" class="list-unstyled">
+            {% for message in messages %}
+                <li class="alert alert-success">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container">
+        {% if session['usuario_logado'] %}
+        <div align="right" style="float: right; margin-top: 35px;">
+            <div>
+                {{ session['usuario_logado'] }}
+            </div>
+            <a href="/logout" >Logout</a>
+        </div>
+        {% endif %}
+
+        <div class="page-header">
+            <h1>{{ titulo|title }}</h1>
+        </div>
+
+
+
+        {% block conteudo %}{% endblock %}
+
+    </div>
+  </body>
+</html>
