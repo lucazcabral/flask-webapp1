@@ -2,6 +2,7 @@
 from flask import *
 
 from jogo import Jogo
+from usuario import Usuario
 
 
 titulo_pagina = 'Jogoteca'
@@ -14,16 +15,23 @@ app.secret_key = 'jogos'
 def autentica() -> str:
     with open('data/users.csv') as arquivo_usuarios:
         for line in arquivo_usuarios.readlines():
-            usuario = line.split(';')
-            if(usuario[0] == request.form['usuario']
-                    and usuario[1] == request.form['senha']):
-                session['usuario_logado'] = request.form['usuario']
-                flash(f'{request.form["usuario"]} logado com sucesso')
+            usuario_file = line.split(';')
+            usuario: Usuario = Usuario(
+                id=usuario_file[0],
+                nome=usuario_file[1],
+                login=usuario_file[2],
+                senha=usuario_file[3]
+            )
 
-                return redirect(request.form["proxima"])
+            if(usuario.login == request.form['usuario']
+                    and usuario.senha == request.form['senha']):
+                session['usuario_logado'] = usuario.nome
+                flash(f'{usuario.nome} logado com sucesso')
+
+                return redirect(url_for(request.form["proxima"]))
 
     flash('Usuário ou senha incorretos', )
-    return redirect('/login')
+    return redirect(url_for('login'))
 
 
 @app.route('/login')
@@ -32,7 +40,7 @@ def login() -> str:
 
     proxima = request.args.get('proxima')
     if (proxima is None):
-        proxima = '/'
+        proxima = 'home'
 
     return render_template(
         'login.html',
@@ -50,14 +58,14 @@ def logout() -> str:
     else:
         session['usuario_logado'] = None
         flash('Logout efetuado com sucesso.')
-        return redirect('/login')
+        return redirect(url_for('login'))
 
 
 @app.route('/')
 def home() -> str:
     if ('usuario_logado' not in session or session['usuario_logado'] is None):
         flash('Sem usuário logado.')
-        return redirect('/login?proxima=/')
+        return redirect(url_for('login', proxima = 'home'))
     else:
         titulo = "Jogoteca"
 
@@ -72,7 +80,7 @@ def home() -> str:
 def jogo_novo() -> str:
     if ('usuario_logado' not in session or session['usuario_logado'] is None):
         flash('Sem usuário logado.')
-        return redirect('/login?proxima=/jogos/novo')
+        return redirect(url_for('login', proxima = 'jogos_novo'))
     else:
         titulo = 'Novo Jogo'
 
@@ -87,7 +95,7 @@ def jogo_novo() -> str:
 def jogo_novo_salvar() -> str:
     if ('usuario_logado' not in session or session['usuario_logado'] is None):
         flash('Sem usuário logado.')
-        return redirect('/login?proxima=/jogos/novo')
+        return redirect(url_for('login', proxima='jogo_novo'))
     else:
         ano = request.form['ano']
         nome = request.form['nome']
@@ -119,28 +127,28 @@ def jogo_novo_salvar() -> str:
                                         f'{console};')
         elif (ano is None or ano == '' or ano == 0):
             flash("Ano não preenchido")
-            return redirect('/jogos/novo')
+            return redirect(url_for('jogo_novo'))
         elif (nome is None or nome == ''):
             flash("Nome não preenchido")
-            return redirect('/jogos/novo')
+            return redirect(url_for('jogo_novo'))
         elif (categoria is None or categoria == ''):
             flash("Categoria não preenchida")
-            return redirect('/jogos/novo')
+            return redirect(url_for('jogo_novo'))
         elif (publicador is None or publicador == ''):
             flash("Publicador não preenchido")
-            return redirect('/jogos/novo')
+            return redirect(url_for('jogo_novo'))
         elif (console is None or console == ''):
             flash("Console não preenchido")
-            return redirect('/jogos/novo')
+            return redirect(url_for('jogo_novo'))
 
-        return redirect('/jogos')
+        return redirect(url_for('lista_jogos'))
 
 
 @app.route('/jogos')
 def lista_jogos() -> str:
     if ('usuario_logado' not in session or session['usuario_logado'] is None):
         flash('Sem usuário logado.')
-        return redirect('/login?proxima=/jogos')
+        return redirect(url_for('login',proxima = 'lista_jogos'))
     else:
         titulo: str = 'Jogos'
         lista_jogos_cadastrados: list = []
